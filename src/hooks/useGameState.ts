@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { getStoredNumber, setStoredNumber } from '@/lib/storage';
 
 export interface Tile {
   id: string;
@@ -107,9 +108,9 @@ export const useGameState = () => {
       };
       
       // Save high score to localStorage
-      const highScore = parseInt(localStorage.getItem('pianoTilesHighScore') || '0');
+      const highScore = getStoredNumber('pianoTilesHighScore', 0);
       if (prev.score > highScore) {
-        localStorage.setItem('pianoTilesHighScore', prev.score.toString());
+        setStoredNumber('pianoTilesHighScore', prev.score);
       }
       
       return {
@@ -259,7 +260,7 @@ export const useGameState = () => {
   }, [gameState.isPlaying, gameState.isGameOver, gameState.isPaused, updateTilePositions]);
 
   const getHighScore = useCallback(() => {
-    return parseInt(localStorage.getItem('pianoTilesHighScore') || '0');
+    return getStoredNumber('pianoTilesHighScore', 0);
   }, []);
 
   const getCurrentStats = useCallback((): GameStats => {

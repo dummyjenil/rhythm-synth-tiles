@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { Synthetizer } from 'spessasynth_lib';
+import { logger } from '@/lib/logger';
 
 interface AudioEngineConfig {
   soundFontUrl?: string;
@@ -25,7 +26,7 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
         // For now, we'll continue without it and use fallback audio
         await audioContextRef.current.audioWorklet.addModule('/worklet_processor.min.js');
       } catch (error) {
-        console.warn('AudioWorklet not available, using fallback audio:', error);
+        logger.warn('AudioWorklet not available, using fallback audio:', error);
       }
       
       // Create a basic gain node for now
@@ -33,9 +34,9 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
       gainNode.connect(audioContextRef.current.destination);
       
       isInitializedRef.current = true;
-      console.log('Audio engine initialized');
+      logger.info('Audio engine initialized');
     } catch (error) {
-      console.error('Failed to initialize audio engine:', error);
+      logger.error('Failed to initialize audio engine:', error);
     }
   }, []);
 
@@ -58,10 +59,10 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
         arrayBuffer
       );
       
-      console.log('SoundFont loaded successfully');
+      logger.info('SoundFont loaded successfully');
       return true;
     } catch (error) {
-      console.error('Failed to load SoundFont:', error);
+      logger.error('Failed to load SoundFont:', error);
       return false;
     }
   }, [initializeEngine]);
@@ -101,7 +102,7 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
         oscillator.stop(audioContextRef.current.currentTime + duration);
       }
     } catch (error) {
-      console.error('Failed to play note:', error);
+      logger.error('Failed to play note:', error);
     }
   }, []);
 

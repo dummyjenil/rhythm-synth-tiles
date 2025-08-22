@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { validateSoundFont, validateAudioFile } from '@/lib/fileValidation';
+import { logger } from '@/lib/logger';
 import heroImage from '@/assets/piano-tiles-hero.jpg';
 
 interface StartMenuProps {
@@ -25,19 +27,49 @@ export const StartMenu = ({
   const [soundFontFile, setSoundFontFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
 
-  const handleSoundFontUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSoundFontUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && (file.name.endsWith('.sf2') || file.name.endsWith('.sf3') || file.name.endsWith('.dls'))) {
+    if (!file) return;
+
+    try {
+      const validation = await validateSoundFont(file);
+      if (!validation.isValid) {
+        logger.warn('SoundFont validation failed:', validation.error);
+        alert(`Invalid SoundFont file: ${validation.error}`);
+        event.target.value = ''; // Clear the input
+        return;
+      }
+
       setSoundFontFile(file);
       onLoadSoundFont(file);
+      logger.info('SoundFont file validated and loaded');
+    } catch (error) {
+      logger.error('Error validating SoundFont:', error);
+      alert('Error validating file. Please try again.');
+      event.target.value = '';
     }
   };
 
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('audio/')) {
+    if (!file) return;
+
+    try {
+      const validation = await validateAudioFile(file);
+      if (!validation.isValid) {
+        logger.warn('Audio file validation failed:', validation.error);
+        alert(`Invalid audio file: ${validation.error}`);
+        event.target.value = ''; // Clear the input
+        return;
+      }
+
       setAudioFile(file);
       onLoadAudio(file);
+      logger.info('Audio file validated and loaded');
+    } catch (error) {
+      logger.error('Error validating audio file:', error);
+      alert('Error validating file. Please try again.');
+      event.target.value = '';
     }
   };
 
