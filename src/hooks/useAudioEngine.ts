@@ -23,18 +23,19 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
       // Try to add the worklet processor (this might fail if file not available)
       try {
         // Note: In production, you would need to serve the worklet_processor.min.js file
-        // For now, we'll continue without it and use fallback audio
         await audioContextRef.current.audioWorklet.addModule('/worklet_processor.min.js');
+        isInitializedRef.current = true;
+        logger.info('Audio engine initialized with AudioWorklet');
       } catch (error) {
         logger.warn('AudioWorklet not available, using fallback audio:', error);
+        // Don't set isInitializedRef.current = true here, so SoundFont loading will be skipped
       }
       
-      // Create a basic gain node for now
+      // Create a basic gain node for basic audio functionality
       const gainNode = audioContextRef.current.createGain();
       gainNode.connect(audioContextRef.current.destination);
       
-      isInitializedRef.current = true;
-      logger.info('Audio engine initialized');
+      logger.info('Basic audio engine ready');
     } catch (error) {
       logger.error('Failed to initialize audio engine:', error);
     }
@@ -51,16 +52,28 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
         await audioContextRef.current!.resume();
       }
 
+      // Only try to load SpessaSynth if AudioWorklet is properly initialized
+      if (!isInitializedRef.current) {
+        logger.warn('AudioWorklet not available, SoundFont loading skipped');
+        return false;
+      }
+
       const arrayBuffer = await soundFontFile.arrayBuffer();
       
-      // Create synthetizer with the loaded SoundFont ArrayBuffer
-      synthRef.current = new Synthetizer(
-        audioContextRef.current!.destination,
-        arrayBuffer
-      );
-      
-      logger.info('SoundFont loaded successfully');
-      return true;
+      try {
+        // Create synthetizer with the loaded SoundFont ArrayBuffer
+        synthRef.current = new Synthetizer(
+          audioContextRef.current!.destination,
+          arrayBuffer
+        );
+        
+        logger.info('SoundFont loaded successfully');
+        return true;
+      } catch (synthError) {
+        logger.error('Failed to create Synthetizer, falling back to basic audio:', synthError);
+        synthRef.current = null;
+        return false;
+      }
     } catch (error) {
       logger.error('Failed to load SoundFont:', error);
       return false;
