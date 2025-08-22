@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
-import { Synthetizer, SoundFont2 } from 'spessasynth_lib';
+import { Synthetizer } from 'spessasynth_lib';
 
 interface AudioEngineConfig {
   soundFontUrl?: string;
@@ -19,13 +19,20 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
       // Create AudioContext
       audioContextRef.current = new AudioContext();
       
-      // Create a basic gain node for now (we'll load SoundFont later when user provides one)
+      // Try to add the worklet processor (this might fail if file not available)
+      try {
+        // Note: In production, you would need to serve the worklet_processor.min.js file
+        // For now, we'll continue without it and use fallback audio
+        await audioContextRef.current.audioWorklet.addModule('/worklet_processor.min.js');
+      } catch (error) {
+        console.warn('AudioWorklet not available, using fallback audio:', error);
+      }
+      
+      // Create a basic gain node for now
       const gainNode = audioContextRef.current.createGain();
       gainNode.connect(audioContextRef.current.destination);
       
-      // For now, we'll use simple oscillator sounds until SoundFont is loaded
       isInitializedRef.current = true;
-      
       console.log('Audio engine initialized');
     } catch (error) {
       console.error('Failed to initialize audio engine:', error);
@@ -38,13 +45,17 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
         await initializeEngine();
       }
 
+      // Resume audio context if needed
+      if (audioContextRef.current!.state === 'suspended') {
+        await audioContextRef.current!.resume();
+      }
+
       const arrayBuffer = await soundFontFile.arrayBuffer();
-      const soundFont = new SoundFont2(arrayBuffer);
       
-      // Create synthetizer with the loaded SoundFont
+      // Create synthetizer with the loaded SoundFont ArrayBuffer
       synthRef.current = new Synthetizer(
         audioContextRef.current!.destination,
-        soundFont
+        arrayBuffer
       );
       
       console.log('SoundFont loaded successfully');
@@ -57,13 +68,20 @@ export const useAudioEngine = (config: AudioEngineConfig = {}) => {
 
   const playNote = useCallback((note: number, velocity: number = 127, duration: number = 0.2) => {
     try {
+      if (!audioContextRef.current) return;
+
+      // Resume audio context if needed
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+
       if (synthRef.current) {
         // Use SpessaSynth if available
         synthRef.current.noteOn(0, note, velocity);
         setTimeout(() => {
           synthRef.current?.noteOff(0, note);
         }, duration * 1000);
-      } else if (audioContextRef.current) {
+      } else {
         // Fallback to simple oscillator
         const oscillator = audioContextRef.current.createOscillator();
         const gainNode = audioContextRef.current.createGain();
