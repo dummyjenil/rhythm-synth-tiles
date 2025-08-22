@@ -44,6 +44,14 @@ export default {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
@@ -61,12 +69,31 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				game: {
+					'tile-black': 'hsl(var(--tile-black))',
+					'tile-white': 'hsl(var(--tile-white))',
+					'tile-active': 'hsl(var(--tile-active))',
+					'tile-miss': 'hsl(var(--tile-miss))'
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				game: ['Inter', 'system-ui', 'sans-serif'],
+			},
+			boxShadow: {
+				'tile': 'var(--shadow-tile)',
+				'glow': 'var(--shadow-glow)',
+				'game': 'var(--shadow-game)'
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-game': 'var(--gradient-game)',
+				'gradient-success': 'var(--gradient-success)'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -84,11 +111,38 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'tile-fall': {
+					from: { transform: 'translateY(-100px)' },
+					to: { transform: 'translateY(100vh)' }
+				},
+				'tile-hit': {
+					'0%': { transform: 'scale(1)', opacity: '1' },
+					'50%': { transform: 'scale(0.9)', opacity: '0.8' },
+					'100%': { transform: 'scale(1)', opacity: '0' }
+				},
+				'combo-pop': {
+					'0%': { transform: 'scale(0.8) translateY(0)', opacity: '0' },
+					'50%': { transform: 'scale(1.2) translateY(-10px)', opacity: '1' },
+					'100%': { transform: 'scale(1) translateY(-5px)', opacity: '1' }
+				},
+				'score-pulse': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.05)' }
+				},
+				'glow-pulse': {
+					'0%, 100%': { boxShadow: 'var(--shadow-glow)' },
+					'50%': { boxShadow: '0 0 60px hsl(268 83% 58% / 0.6)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'tile-fall': 'tile-fall 2s linear forwards',
+				'tile-hit': 'tile-hit 0.3s ease-out forwards',
+				'combo-pop': 'combo-pop 0.5s ease-out forwards',
+				'score-pulse': 'score-pulse 0.4s ease-out',
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
 			}
 		}
 	},
